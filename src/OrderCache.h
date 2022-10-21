@@ -107,7 +107,6 @@ class OrderCache : public OrderCacheInterface, public OrdersidOrder
   UserOrdersid user_ordersid{};
 
   SecuritiesOrdersid sec_ordersid{};
-  OrderidSecurity orderid_sec{};
 
 public:
   void addOrder(Order o) override
@@ -128,7 +127,6 @@ public:
 
     //Securities mapping -- add order
     auto secId = o.securityId();
-    orderid_sec[orderId] = secId;
     sec_ordersid[secId].push_back(orderId);
   }
   void cancelOrder(const std::string& orderId ) override
@@ -140,8 +138,7 @@ public:
 
     //Securities mpping -- remove order
     {
-      auto secid = orderid_sec[orderId];
-      orderid_sec.erase(orderId);
+      auto secid = (*this)[orderId].securityId();
       auto& secorders = sec_ordersid[secid];
       secorders.erase(remove_if(secorders.begin(), secorders.end(), [&](auto&orderid) -> bool {
         return orderid == orderId;
@@ -160,8 +157,7 @@ public:
       (*this).erase(orderId);
 
       //Securities mpping -- remove order
-      auto secid = orderid_sec[orderId];
-      orderid_sec.erase(orderId);
+      auto secid = (*this)[orderId].securityId();
 
       auto& secorders = sec_ordersid[secid];
       secorders.erase(remove_if(secorders.begin(), secorders.end(), [&](auto&orderid) -> bool {
@@ -183,8 +179,7 @@ public:
       (*this).erase(orderId);
 
       //Securities mapping -- remove order
-      auto secid = orderid_sec[orderId];
-      orderid_sec.erase(orderId);
+      auto secid = (*this)[orderId].securityId();
 
       auto& secorders = sec_ordersid[secid];
       secorders.erase(remove_if(secorders.begin(), secorders.end(), [&](auto&orderid) ->bool {
