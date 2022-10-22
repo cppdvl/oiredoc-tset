@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <iomanip>
+#include <iostream>
 #include <algorithm>
 #include <functional>
 #include <unordered_map>
@@ -98,7 +100,7 @@ public:
 
 using namespace std;
 using UserOrdersid = unordered_map<string, set<string>>;
-using SecuritiesOrdersid = unordered_map<string, vector<string>>;
+using SecuritiesOrdersid = unordered_map<string, set<string>>;
 using OrderidSecurity = unordered_map<string, string>;
 using OrdersidOrder = unordered_map<string, Order>;
 
@@ -109,6 +111,23 @@ class OrderCache : public OrderCacheInterface, public OrdersidOrder
   SecuritiesOrdersid sec_ordersid{};
 
 public:
+
+  //Purpose: to make test
+  set<string> getUserOrders(string userId)
+  {
+    return user_ordersid[userId]; 
+  }
+  //Purpose to test.
+  set<string> getSecs()
+  {
+    set<string> retset{};
+    for (auto kv : sec_ordersid)
+    {
+      retset.insert(kv.first);
+    }
+    return retset;
+  }
+
   void addOrder(Order o) override
   {
     /* In order to use [] operator we need to provide a default () constructor of Order,
@@ -127,22 +146,19 @@ public:
 
     //Securities mapping -- add order
     auto secId = o.securityId();
-    sec_ordersid[secId].push_back(orderId);
+    sec_ordersid[secId].insert(orderId);
   }
   void cancelOrder(const std::string& orderId ) override
   {
     if ((*this).find(orderId) == (*this).end()) return;
 
+    auto secid = (*this)[orderId].securityId();
     user_ordersid.erase((*this)[orderId].user());
     (*this).erase(orderId);
 
     //Securities mpping -- remove order
     {
-      auto secid = (*this)[orderId].securityId();
-      auto& secorders = sec_ordersid[secid];
-      secorders.erase(remove_if(secorders.begin(), secorders.end(), [&](auto&orderid) -> bool {
-        return orderid == orderId;
-      }));
+      sec_ordersid[secid].erase(orderId);
     }
   }
   void cancelOrdersForUser(const std::string& user) override
@@ -154,15 +170,12 @@ public:
 
     for (auto& orderId : orderIds)
     {
-      (*this).erase(orderId);
 
       //Securities mpping -- remove order
       auto secid = (*this)[orderId].securityId();
+      sec_ordersid[secid].erase(orderId);
 
-      auto& secorders = sec_ordersid[secid];
-      secorders.erase(remove_if(secorders.begin(), secorders.end(), [&](auto&orderid) -> bool {
-        return orderid == orderId;
-      }));
+      (*this).erase(orderId);
     }
   }
   void cancelOrdersForSecIdWithMinimumQty(const std::string& securityId, unsigned int minQty) override
@@ -176,15 +189,13 @@ public:
       if (!removeCondition) continue;
 
       user_ordersid[(*this)[orderId].user()].erase(orderId);
-      (*this).erase(orderId);
-
+      
       //Securities mapping -- remove order
       auto secid = (*this)[orderId].securityId();
+      sec_ordersid[secid].erase(orderId);
 
-      auto& secorders = sec_ordersid[secid];
-      secorders.erase(remove_if(secorders.begin(), secorders.end(), [&](auto&orderid) ->bool {
-        return orderid == orderId;
-      }));
+      (*this).erase(orderId);
+
     }
   }
   unsigned int getMatchingSizeForSecurity(const std::string& securityId)
@@ -196,7 +207,7 @@ public:
     }
     return 0;    
   }
-  vector<Order> getAllOrders()
+  vector<Order> getAllOrders() const
   {
     auto allOrders = vector<Order>{};
     for (auto& kv : (*this))

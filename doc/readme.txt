@@ -46,9 +46,9 @@ Read Me:
         - Can only match a Buy order with a Sell order
         - Buy order can match against multiple Sell orders (and vice versa)
             - eg a security id "ABCD" has 
-                Buy  order with qty 10000
-                Sell order with qty  2000
-                Sell order with qty  1000               
+                Buy   10000
+                Sell   2000
+                Sell   1000
             - security id "ABCD" has a total match of 3000. The Buy order's qty is big enough
               to match against both Sell orders and still has 7000 remaining
         - Any order quantity already allocated to a match cannot be reused as a match 
