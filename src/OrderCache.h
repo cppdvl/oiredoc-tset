@@ -198,16 +198,58 @@ public:
 
     }
   }
-  unsigned int getMatchingSizeForSecurity(const std::string& securityId)
+  unsigned int getMatchingSizeForSecurity(const std::string& securityId) override
   {
     auto orderIds = sec_ordersid[securityId];
-    for (auto& orderid : orderIds)
+    vector<pair<string,string>> relations{};
+    unordered_map<string, unsigned int> orderIds_qty{};
+
+    //Create qty scores map
+    for(auto& orderId : orderIds) orderIds_qty.insert(make_pair(orderId, (*this)[orderId].qty()));
+    //Create relations
+    for(auto it0 = orderIds.begin(); it0 != orderIds.end(); ++it0) for (auto it1 = next(it0, 1); it1 != orderIds.end(); ++it1)
     {
 
+      bool goodrelation = true;
+      goodrelation = goodrelation && ((*this)[*it0].side() != (*this)[*it1].side());
+      goodrelation = goodrelation && ((*this)[*it0].company() != (*this)[*it1].company());
+
+      if (goodrelation) relations.push_back(make_pair(*it0, *it1));
+
     }
-    return 0;    
+
+    unsigned int accumulator{0};
+
+    //Calc Match
+    while(any_of(relations.begin(), relations.end(), [&](auto& rij)->bool
+    {
+      auto& oi = rij.first;
+      auto& oj = rij.second;
+
+      auto& qi = orderIds_qty[oi];
+      auto& qj = orderIds_qty[oj];
+
+      bool good = true;
+
+      good = good && ((qi * qj) > 0);
+      if (good)
+      {
+        accumulator += qi > qj ? qj : qi;
+
+        int qiqj = qi - qj;
+        int qjqi = qj - qi;
+
+        qi = qiqj >= 0 ? qiqj : 0;
+        qj = qjqi >= 0 ? qjqi : 0;
+      }
+
+      return good;
+    }));
+
+
+    return accumulator;
   }
-  vector<Order> getAllOrders() const
+  vector<Order> getAllOrders() const override
   {
     auto allOrders = vector<Order>{};
     for (auto& kv : (*this))
@@ -216,6 +258,7 @@ public:
     }
     return allOrders;
   }
+
 };
 
 

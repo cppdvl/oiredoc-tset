@@ -61,7 +61,7 @@ bool AddOrderTest(vector<Order> os)
     auto orderFound = oc.find(orderid_undertest) != oc.end();
     if (!orderFound) 
     {
-      cout << string{ __FILE__} + ":" + string{__LINE__} + std::string{" order not found in cache "};
+      cout << string{ __FILE__} + ":" << __LINE__ << std::string{" order not found in cache "} << endl;
       return false;
     }
 
@@ -70,19 +70,16 @@ bool AddOrderTest(vector<Order> os)
 
     if (jdump != cachedump)
     {
-      cout << string{__FILE__} + ":" + string{__LINE__} + std::string{" orderid under test: "} << orderid_undertest;
+      cout << string{__FILE__} + ":" << __LINE__ << std::string{" orderid under test: "} << orderid_undertest << endl;
       return false;
     }
   }
 
   return true;
-
 }
 
 bool CancelOrderTest(vector<Order> os)
 {
-
-
   OrderCache oc;
   //Perform Action
   for (auto& o: os)
@@ -97,7 +94,7 @@ bool CancelOrderTest(vector<Order> os)
     oc.cancelOrder(oid);
     if (oc.find(oid) != oc.end())
     {
-      cout << string{__FILE__} + ":" + string{__LINE__} + std::string{"order cancelling didn't take place: "} << oid << endl;
+      cout << string{__FILE__} + ":" << __LINE__ << std::string{"order cancelling didn't take place: "} << oid << endl;
       return false;
     }
   }
@@ -124,7 +121,7 @@ bool CancelOrderForUserTest(vector<Order> os)
     {
       if(oc.find(oid) != oc.end())
       {
-        cout << string{__FILE__} + ": " + string{__LINE__} + std::string{"order cancelling didn't take place: "} << oid << endl;
+        cout << string{__FILE__} + ": " << __LINE__ << std::string{"order cancelling didn't take place: "} << oid << endl;
         return true;
       }
       return false;
@@ -187,6 +184,23 @@ bool CancelOrdersForSecIdWithMinimumQtyTest(vector<Order> os)
 
 }
 
+bool GetMatchingSizeForSecurityTest(vector<Order> matchTestOs, const std::string& secId, unsigned int qtyMatchTest)
+{
+  OrderCache oc;
+  for (auto& o : matchTestOs)
+  {
+    oc.addOrder(o);
+  }
+
+  auto qtyMatch = oc.getMatchingSizeForSecurity(secId);
+  auto testOk = qtyMatchTest == qtyMatch;
+  if (!testOk)
+  {
+    cout << string{__FILE__} + string{": "} << __LINE__ << std::string{" bad matched qty: "} << qtyMatch << endl;
+    return false;
+  }
+  return true;
+}
 
 int main ()
 {
@@ -207,12 +221,74 @@ int main ()
     {"OrdId13", "SecId1", "Sell", 1300, "User1", "Company"}
   };
 
-  cout << (AddOrderTest(os) ? "[OK]" : "[FAILED]")<< " addOrder()" << endl;
-  cout << (CancelOrderTest(os) ? "[OK]" : "[FAILED]")<< " cancelOrder()" << endl;
-  cout << (CancelOrderForUserTest(os) ? "[OK]" : "[FAILED]")<< " cancelOrderForUser()" << endl;
-  cout << (CancelOrdersForSecIdWithMinimumQtyTest(os) ? "[OK]" : "[FAILED]")<< " cancelOrderForUser()" << endl;
+  cout << (AddOrderTest(os) ? "[OK]" : "[FAILED]") << " addOrder()" << endl;
+  cout << (CancelOrderTest(os) ? "[OK]" : "[FAILED]") << " cancelOrder()" << endl;
+  cout << (CancelOrderForUserTest(os) ? "[OK]" : "[FAILED]") << " cancelOrderForUser()" << endl;
+  cout << (CancelOrdersForSecIdWithMinimumQtyTest(os) ? "[OK]" : "[FAILED]") << " cancelOrderForSecIdWithMinimumQty()" << endl;
 
 
+  //According to what's explained the match size for SecId2 is 2700...
+  vector<Order> matchTestOs0
+  {
+    {"OrdId1", "SecId1", "Buy",  1000, "User1", "CompanyA"},
+    {"OrdId2", "SecId2", "Sell", 3000, "User2", "CompanyB"},
+    {"OrdId3", "SecId1", "Sell",  500, "User3", "CompanyA"},
+    {"OrdId4", "SecId2", "Buy",   600, "User4", "CompanyC"},
+    {"OrdId5", "SecId2", "Buy",   100, "User5", "CompanyB"},
+    {"OrdId6", "SecId3", "Buy",  1000, "User6", "CompanyD"},
+    {"OrdId7", "SecId2", "Buy",  2000, "User7", "CompanyE"},
+    {"OrdId8", "SecId2", "Sell", 5000, "User8", "CompanyE"}
+  };
+
+
+
+  cout << (GetMatchingSizeForSecurityTest(matchTestOs0, "SecId2", 2700) ? "[OK]" : "[FAILED]") << " getMatchingSizeForSecurity(SecId2, 2700)" << endl;
+
+  cout << (GetMatchingSizeForSecurityTest(matchTestOs0, "SecId1", 0) ? "[OK]" : "[FAILED]") << " getMatchingSizeForSecurity(SecId1, 0)" << endl;
+
+  vector<Order> matchTestOs1
+  {
+
+    {"OrdId1", "SecId1", "Sell", 100, "User10", "Company2"},
+    {"OrdId2", "SecId3", "Sell", 200, "User8", "Company2"},
+    {"OrdId3", "SecId1", "Buy", 300, "User13", "Company2"},
+    {"OrdId4", "SecId2", "Sell", 400, "User12", "Company2"},
+    {"OrdId5", "SecId3", "Sell", 500, "User7", "Company2"},
+    {"OrdId6", "SecId3", "Buy", 600, "User3", "Company1"},
+    {"OrdId7", "SecId1", "Sell", 700, "User10", "Company2"},
+    {"OrdId8", "SecId1", "Sell", 800, "User2", "Company1"},
+    {"OrdId9", "SecId2", "Buy", 900, "User6", "Company2"},
+    {"OrdId10", "SecId2", "Sell", 1000, "User5", "Company1"},
+    {"OrdId11", "SecId1", "Sell", 1100, "User13", "Company2"},
+    {"OrdId12", "SecId2", "Buy", 1200, "User9", "Company2"},
+    {"OrdId13", "SecId1", "Sell", 1300, "User1", "Company"}
+  };
+
+  cout << (GetMatchingSizeForSecurityTest(matchTestOs1, "SecId1", 300) ? "[OK]" : "[FAILED]") << " getMatchingSizeForSecurity(SecId1, 300)" << endl;
+
+  cout << (GetMatchingSizeForSecurityTest(matchTestOs1, "SecId2", 1000) ? "[OK]" : "[FAILED]") << " getMatchingSizeForSecurity(SecId2, 1000)" << endl;
+
+  cout << (GetMatchingSizeForSecurityTest(matchTestOs1, "SecId3", 600) ? "[OK]" : "[FAILED]") << " getMatchingSizeForSecurity(SecId3, 600)" << endl;
+
+
+  vector<Order> matchTestOs2
+  {
+    {"OrdId1", "SecId3", "Sell", 100, "User1", "Company1"},
+    {"OrdId2", "SecId3", "Sell", 200, "User3", "Company2"},
+    {"OrdId3", "SecId1", "Buy", 300, "User2", "Company1"},
+    {"OrdId4", "SecId3", "Sell", 400, "User5", "Company2"},
+    {"OrdId5", "SecId2", "Sell", 500, "User2", "Company1"},
+    {"OrdId6", "SecId2", "Buy", 600, "User3", "Company2"},
+    {"OrdId7", "SecId2", "Sell", 700, "User1", "Company1"},
+    {"OrdId8", "SecId1", "Sell", 800, "User2", "Company1"},
+    {"OrdId9", "SecId1", "Buy", 900, "User5", "Company2"},
+    {"OrdId10", "SecId1", "Sell", 1000, "User1", "Company1"},
+    {"OrdId11", "SecId2", "Sell", 1100, "User6", "Company2"}
+  };
+
+  cout << (GetMatchingSizeForSecurityTest(matchTestOs2, "SecId2", 600) ? "[OK]" : "[FAILED]") << " getMatchingSizeForSecurity(SecId2, 600)" << endl;
+
+  cout << (GetMatchingSizeForSecurityTest(matchTestOs2, "SecId3", 0) ? "[OK]" : "[FAILED]") << " getMatchingSizeForSecurity(SecId3, 0)" << endl;
 
   return 0;
 }

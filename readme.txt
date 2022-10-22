@@ -1,3 +1,10 @@
++ C O D E R I O - T E S T +
+to build and run the test:
+
+g++ -g -o o src/OrderCacheTest.cpp -std=c++17
+./o.exe
+
+
 Read Me:
  
   - Your task is to implement an in-memory cache of order objects that supports 
