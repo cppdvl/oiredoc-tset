@@ -110,7 +110,7 @@ Read Me:
             OrdId10 SecId2 Sell 1000 User5 Company1
             OrdId11 SecId1 Sell 1100 User13 Company2
             OrdId12 SecId2 Buy 1200 User9 Company2
-            OrdId13 SecId1 Sell 1300 User1 Company
+            OrdId13 SecId1 Sell 1300 User1 Company2
 
         Total qty matching for security ids:
             SecId1 300
